@@ -1,27 +1,81 @@
 # SMS Spam Classifier
 
-This repository contains an end-to-end SMS spam classification workflow, from exploratory analysis to model training and error analysis.
+This project analyzes SMS messages and classifies them as `spam` or `ham` (not spam). It was built as an A1 machine learning assignment and includes both a supervised classification workflow and an embedding-based clustering exploration.
 
 ## Table of Contents
 
-- [Setup Environment](#setup-environment)
-- [Windows PowerShell](#windows-powershell)
-- [Linux](#linux)
-- [Current Implementation](#current-implementation)
-- [Dataset Source](#dataset-source)
-- [Method Overview](#method-overview)
-- [Text Representation](#text-representation)
-- [Modeling Approach](#modeling-approach)
-- [Models Used in the Notebook](#models-used-in-the-notebook)
-- [Hyperparameter Optimization per Model](#hyperparameter-optimization-per-model)
-- [Evaluation](#evaluation)
-- [Utility Functions](#utility-functions)
-- [Project Structure](#project-structure)
+- [Project Goal](#project-goal)
+- [Assignment-Relevant Scope](#assignment-relevant-scope)
+- [Dataset](#dataset)
+- [Repository Structure](#repository-structure)
+- [Setup](#setup)
+- [How To Run](#how-to-run)
+- [Supervised Learning Approach](#supervised-learning-approach)
+- [Clustering / Embedding Exploration](#clustering--embedding-exploration)
+- [Code Overview](#code-overview)
+- [Design Decision](#design-decision)
 - [Dependencies](#dependencies)
+- [Discussion Points For The Appointment](#discussion-points-for-the-appointment)
+- [Possible Short Submission Note](#possible-short-submission-note)
 
-## Setup Environment
+## Project Goal
 
-Create and activate a local virtual environment before installing dependencies.
+The main goal is to build and compare approaches for SMS spam detection and to document the reasoning behind the chosen solution.
+
+The project covers:
+
+- exploratory analysis of SMS messages
+- text preprocessing and feature engineering
+- supervised spam classification
+- hyperparameter optimization
+- model evaluation and error analysis
+- semantic clustering with embeddings
+
+## Assignment-Relevant Scope
+
+This repository addresses the core points visible in the assignment brief:
+
+- **Classical Machine Learning & Data Science**
+  - word and n-gram analysis in spam vs. ham messages
+  - supervised SMS spam classification model
+  - clearly documented Python implementation
+- **GenAI / LLM**
+  - semantic clustering of SMS messages with embeddings
+  - external embedding models can be used and discussed separately in the appointment
+
+## Dataset
+
+The project uses the **SMS Spam Collection Dataset** via the Kaggle mirror:
+
+<https://www.kaggle.com/datasets/uciml/sms-spam-collection-dataset?resource=download>
+
+After downloading:
+
+1. Extract the archive.
+2. Place `spam.csv` in `data/raw/`.
+3. The expected path is `data/raw/spam.csv`.
+
+## Repository Structure
+
+```text
+sms-spam-classifier/
+|-- data/
+|   `-- raw/
+|-- notebooks/
+|   |-- sms_spam_supervised_model_selection.ipynb
+|   `-- sms_spam_semantic_embedding_clustering.ipynb
+|-- src/
+|   |-- __init__.py
+|   |-- modeling.py
+|   |-- training_utils.py
+|   `-- utils.py
+|-- tests/
+|-- pyproject.toml
+|-- requirements.txt
+`-- README.md
+```
+
+## Setup
 
 ### Windows PowerShell
 
@@ -31,12 +85,6 @@ py -m venv .venv
 python -m pip install --upgrade pip
 pip install -r requirements.txt
 pip install -e .
-```
-
-To deactivate:
-
-```powershell
-deactivate
 ```
 
 ### Linux
@@ -55,127 +103,99 @@ To deactivate the environment:
 deactivate
 ```
 
-## Current Implementation
+## How To Run
 
-- Reusable text/feature utilities are in `src/utils.py`.
-- Modeling strategies and cross-validation trainer are in `src/modeling.py`.
-- Training/evaluation pipeline helpers are in `src/training_utils.py`.
-- `notebooks/sms_spam_supervised_model_selection.ipynb` contains the main supervised learning workflow: feature engineering, multi-model comparison, Bayesian hyperparameter optimization, stratified k-fold evaluation, and final holdout-test assessment with recall as the primary optimization target.
-- `notebooks/sms_spam_semantic_embedding_clustering.ipynb` explores transformer-based semantic embeddings, normalization, dimensionality reduction, and unsupervised clustering analysis with KMeans and DBSCAN.
-- The end-to-end modeling notebook uses a clean train/test split for final evaluation, with feature transforms fitted on train data and applied to test data.
+After setting up the environment and placing the dataset in `data/raw/spam.csv`, start Jupyter and open the notebooks:
 
-## Dataset Source
-
-The original dataset source was not available for direct download, so this project uses the Kaggle mirror:
-https://www.kaggle.com/datasets/uciml/sms-spam-collection-dataset?resource=download
-
-Before running the notebook/pipeline, prepare the data file:
-
-1. Download the dataset archive from the Kaggle link above.
-2. Unzip the archive.
-3. Place `spam.csv` in the `data/raw/` folder (inside the `data` subdirectory), so the expected path is `data/raw/spam.csv`.
-
-## Method Overview
-
-### Text Representation
-
-The feature space combines dense handcrafted features and sparse text features:
-
-- Dense features: message length, word/digit/uppercase counts, punctuation counts, ratio features, and spam-oriented indicator/count features.
-- Sparse features: TF-IDF over n-grams (`1` to `3`) with chi-squared feature selection (`SelectKBest`) to keep the most discriminative terms.
-
-The helper `add_selected_tfidf_features(...)` encapsulates TF-IDF fitting + chi-squared selection and returns selected feature columns plus fitted transformers.
-
-### Modeling Approach
-
-The notebook uses a **strategy-based modeling pipeline**:
-
-- a shared train/test split for fair model comparison
-- Optuna-based hyperparameter optimization
-- stratified cross-validation with spam recall as optimization target
-- one common training/evaluation flow across model families (Strategy Pattern in `src/modeling.py`)
-
-Optimization metric detail: Optuna maximizes the **mean cross-validated recall for the spam class**.
-
-For modeling, we intentionally used the **Strategy Design Pattern** because it keeps model-specific logic isolated while sharing one consistent training workflow. This was chosen to:
-
-- make model comparison fair and reproducible (same pipeline, different strategy)
-- add or swap models with minimal code changes
-- improve maintainability by avoiding duplicated training/evaluation code
-- keep experiment code easier to read and extend over time
-
-### Models Used in the Notebook
-
-The notebook compares the following models:
-
-- **Logistic Regression** (`LogisticRegressionStrategy`)
-- **Random Forest** (`RandomForestStrategy`)
-- **Multinomial Naive Bayes** (`MultinomialNBStrategy`)
-
-Default Logistic Regression settings in the strategy are:
-
-- `solver="liblinear"`
-- `class_weight="balanced"`
-- `max_iter=2000`
-
-### Hyperparameter Optimization per Model
-
-The following parameters are optimized with Optuna in the strategy classes:
-
-- **Logistic Regression** (`LogisticRegressionStrategy`)
-- optimized: `C` (log scale, `1e-3` to `10`)
-- fixed during optimization: `solver="liblinear"`, `class_weight="balanced"`, `max_iter=2000`
-
-- **Random Forest** (`RandomForestStrategy`)
-- optimized: `n_estimators`, `max_depth`, `min_samples_split`, `min_samples_leaf`, `class_weight` (`None` or `"balanced"`)
-- fixed during optimization: `random_state=42`, `n_jobs=-1`
-
-- **Multinomial Naive Bayes** (`MultinomialNBStrategy`)
-- optimized: `alpha` (log scale, `1e-3` to `10`), `fit_prior` (`True`/`False`)
-
-### Evaluation
-
-Evaluation is recall-focused while still reporting a full metric set:
-
-- cross-validated recall during optimization
-- holdout test metrics (accuracy, precision, recall, F1, confusion matrix, ROC-AUC)
-- false-negative and false-positive analysis
-- coefficient-based feature importance for interpretability
-
-## Utility Functions
-
-`src/utils.py` provides:
-
-- `preprocess(text)` for normalization, tokenization, and stopword removal
-- `top_ngram_summary(df, n, top_k)` for class-wise n-gram comparison
-- `add_selected_tfidf_features(...)` for TF-IDF + chi-squared feature selection and feature-frame augmentation
-
-`src/training_utils.py` provides:
-
-- `optimize_strategy(...)` for Optuna optimization with CV recall objective
-- `train_final_model(...)` for final fit on full training data
-- `evaluate_final_model(...)` for metric computation on holdout data
-- `analyze_errors(...)` for false-negative/false-positive inspection
-- `run_strategy_pipeline(...)` for end-to-end tuning + training + evaluation flow
-
-## Project Structure
-
-```text
-Sms_spam_analysis/
-|-- data/
-|   `-- raw/
-|-- notebooks/
-|-- src/
-|   |-- __init__.py
-|   |-- modeling.py
-|   |-- training_utils.py
-|   `-- utils.py
-`-- tests/
+```powershell
+jupyter notebook
 ```
+
+Recommended order:
+
+1. `notebooks/sms_spam_supervised_model_selection.ipynb`
+2. `notebooks/sms_spam_semantic_embedding_clustering.ipynb`
+
+## Supervised Learning Approach
+
+The supervised workflow focuses on identifying whether an SMS is spam or ham.
+
+### Feature Representation
+
+The model combines:
+
+- handcrafted text features such as message length, uppercase count, digit count, punctuation count, and spam-related keyword indicators
+- TF-IDF features with n-grams from `1` to `3`
+- chi-squared feature selection to keep the most informative terms
+
+### Models Compared
+
+The following models are implemented through a strategy-based design:
+
+- Logistic Regression
+- Random Forest
+- Multinomial Naive Bayes
+
+### Optimization and Evaluation
+
+The training pipeline uses:
+
+- stratified cross-validation
+- Optuna for hyperparameter optimization
+- **recall for the spam class** as the main optimization target
+
+Reported evaluation includes:
+
+- accuracy
+- precision
+- recall
+- F1-score
+- confusion matrix
+- ROC-AUC (when available)
+- false positive / false negative analysis
+
+## Clustering / Embedding Exploration
+
+The second notebook explores semantic similarity between messages using embeddings.
+
+This part includes:
+
+- text cleanup for embedding generation
+- semantic vector representations of SMS messages
+- clustering experiments with KMeans and DBSCAN
+- cluster quality analysis using metrics such as silhouette score
+
+This section is useful for the GenAI / LLM-related part of the assignment because it shows how message meaning can be represented beyond simple keyword counting.
+
+## Code Overview
+
+- `src/utils.py`
+  - preprocessing helpers
+  - n-gram summaries
+  - TF-IDF feature generation
+  - clustering helper functions
+- `src/modeling.py`
+  - strategy pattern for different model families
+  - reusable cross-validation trainer
+- `src/training_utils.py`
+  - hyperparameter optimization
+  - final model training
+  - evaluation and error analysis
+
+## Design Decision
+
+The project uses the **Strategy Pattern** for the supervised models.
+
+Why this was chosen:
+
+- each model has its own parameter space and construction logic
+- the training and evaluation workflow stays the same across models
+- new model families can be added with little code duplication
+- model comparison becomes cleaner and easier to explain
 
 ## Dependencies
 
-Pinned core dependencies are managed in `requirements.txt`, including:
+Main libraries used in this project:
 
 - `numpy`
 - `pandas`
@@ -183,3 +203,23 @@ Pinned core dependencies are managed in `requirements.txt`, including:
 - `matplotlib`
 - `optuna`
 - `ipywidgets`
+- `sentence-transformers`
+
+The exact versions are listed in `requirements.txt` and `pyproject.toml`.
+
+## Discussion Points For The Appointment
+
+These are good points to explain during the review:
+
+1. Why spam recall was prioritized over plain accuracy.
+2. Why TF-IDF + engineered features were combined.
+3. Why Logistic Regression, Random Forest, and Naive Bayes were selected for comparison.
+4. Why the Strategy Pattern was used in the code design.
+5. What semantic embeddings add compared to classical bag-of-words features.
+6. What the main false positives and false negatives reveal about the dataset.
+
+## Possible Short Submission Note
+
+If you need a short note for the appointment or upload text, you can use:
+
+> This repository contains my A1 solution for SMS spam classification. It includes exploratory text analysis, a supervised machine learning pipeline with model comparison and hyperparameter tuning, and an embedding-based clustering exploration for semantic grouping of messages.
