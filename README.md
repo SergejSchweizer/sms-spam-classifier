@@ -1,11 +1,11 @@
 # SMS Spam Classifier
 
-This project analyzes SMS messages and classifies them as `spam` or `ham` (not spam). It was built as an A1 machine learning assignment and includes both a supervised classification workflow and an embedding-based clustering exploration.
+This project analyzes SMS messages and classifies them as `spam` or `ham` (not spam). It includes both a supervised classification workflow and an embedding-based clustering exploration.
 
 ## Table of Contents
 
 - [Project Goal](#project-goal)
-- [Assignment-Relevant Scope](#assignment-relevant-scope)
+- [Project Scope](#project-scope)
 - [Dataset](#dataset)
 - [Repository Structure](#repository-structure)
 - [Setup](#setup)
@@ -31,9 +31,9 @@ The project covers:
 - model evaluation and error analysis
 - semantic clustering with embeddings
 
-## Assignment-Relevant Scope
+## Project Scope
 
-This repository addresses the core points visible in the assignment brief:
+This repository covers the following areas:
 
 - **Classical Machine Learning & Data Science**
   - word and n-gram analysis in spam vs. ham messages
@@ -165,7 +165,7 @@ This part includes:
 - clustering experiments with KMeans and DBSCAN
 - cluster quality analysis using metrics such as silhouette score
 
-This section is useful for the GenAI / LLM-related part of the assignment because it shows how message meaning can be represented beyond simple keyword counting.
+This section is useful because it shows how message meaning can be represented beyond simple keyword counting.
 
 ## Code Overview
 
@@ -222,4 +222,4 @@ These are good points to explain during the review:
 
 If you need a short note for the appointment or upload text, you can use:
 
-> This repository contains my A1 solution for SMS spam classification. It includes exploratory text analysis, a supervised machine learning pipeline with model comparison and hyperparameter tuning, and an embedding-based clustering exploration for semantic grouping of messages.
+> This repository contains an SMS spam classification project with exploratory text analysis, a supervised machine learning pipeline with model comparison and hyperparameter tuning, and an embedding-based clustering exploration for semantic grouping of messages.
