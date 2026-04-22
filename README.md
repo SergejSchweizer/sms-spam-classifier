@@ -15,7 +15,6 @@ This project analyzes SMS messages and classifies them as `spam` or `ham` (not s
 - [Code Overview](#code-overview)
 - [Design Decision](#design-decision)
 - [Dependencies](#dependencies)
-- [Discussion Points For The Appointment](#discussion-points-for-the-appointment)
 - [Possible Short Submission Note](#possible-short-submission-note)
 
 ## Project Goal
@@ -163,6 +162,8 @@ This part includes:
 - text cleanup for embedding generation
 - semantic vector representations of SMS messages
 - clustering experiments with KMeans and DBSCAN
+- 3D PCA visualization of embeddings (dimension reduction from 384 to 3) for better interpretability
+- label-based 3D view (ham vs spam) to inspect overlap zones between classes
 - cluster quality analysis using metrics such as silhouette score
 
 This section is useful because it shows how message meaning can be represented beyond simple keyword counting.
@@ -174,6 +175,7 @@ This section is useful because it shows how message meaning can be represented b
   - n-gram summaries
   - TF-IDF feature generation
   - clustering helper functions
+  - reusable 3D embedding visualization helpers for both clusters and ham/spam labels
 - `src/modeling.py`
   - strategy pattern for different model families
   - reusable cross-validation trainer
@@ -203,20 +205,10 @@ Main libraries used in this project:
 - `matplotlib`
 - `optuna`
 - `ipywidgets`
+- `ipykernel`
 - `sentence-transformers`
 
 The exact versions are listed in `requirements.txt` and `pyproject.toml`.
-
-## Discussion Points For The Appointment
-
-These are good points to explain during the review:
-
-1. Why spam recall was prioritized over plain accuracy.
-2. Why TF-IDF + engineered features were combined.
-3. Why Logistic Regression, Random Forest, and Naive Bayes were selected for comparison.
-4. Why the Strategy Pattern was used in the code design.
-5. What semantic embeddings add compared to classical bag-of-words features.
-6. What the main false positives and false negatives reveal about the dataset.
 
 ## Possible Short Submission Note
 

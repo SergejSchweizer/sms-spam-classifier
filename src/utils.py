@@ -251,6 +251,52 @@ def plot_clustering_metric(df: pd.DataFrame, title: str = "Metric") -> None:
     plt.show()
 
 
+def plot_embeddings_3d_by_label(
+    df: pd.DataFrame,
+    embedding_col: str = "embedding",
+    label_col: str = "label",
+    spam_color: str = "crimson",
+    ham_color: str = "steelblue",
+    point_size: int = 16,
+    alpha: float = 0.65,
+    random_state: int = 42,
+):
+    """Project embeddings to 3D with PCA and color points by ham/spam label."""
+    if embedding_col not in df.columns:
+        raise ValueError(f"Missing embedding column: {embedding_col}")
+
+    if label_col not in df.columns:
+        raise ValueError(f"Missing label column: {label_col}")
+
+    # Rebuild dense embedding matrix from per-row vectors.
+    X_emb = np.vstack(df[embedding_col].values)
+
+    # Reduce high-dimensional embeddings to a 3D view for plotting.
+    X_3d = PCA(n_components=3, random_state=random_state).fit_transform(X_emb)
+
+    # Support both string labels (ham/spam) and numeric labels (0/1).
+    label_map = {"ham": 0, "spam": 1}
+    y = pd.Series(df[label_col]).map(label_map).fillna(df[label_col]).astype(int).values
+    colors = np.where(y == 1, spam_color, ham_color)
+
+    fig = plt.figure(figsize=(10, 8))
+    ax = fig.add_subplot(111, projection="3d")
+    ax.scatter(
+        X_3d[:, 0],
+        X_3d[:, 1],
+        X_3d[:, 2],
+        c=colors,
+        s=point_size,
+        alpha=alpha,
+    )
+    ax.set_title("3D PCA Projection: Ham vs Spam")
+    ax.set_xlabel("PC1")
+    ax.set_ylabel("PC2")
+    ax.set_zlabel("PC3")
+    plt.tight_layout()
+    return fig, ax
+
+
 def plot_kmeans_clusters_3d(
     X,
     df: pd.DataFrame,
@@ -324,5 +370,6 @@ __all__ = [
     "add_selected_tfidf_features",
     "compute_clustering_metric",
     "plot_clustering_metric",
+    "plot_embeddings_3d_by_label",
     "plot_kmeans_clusters_3d",
 ]
